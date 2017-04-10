@@ -1,3 +1,4 @@
+//looks throught all engines and returns the engines in the specified stage.
 //[Int] => list-of-engines
 function act_eng {
 Parameter s is stage:number.
@@ -15,6 +16,7 @@ Parameter s is stage:number.
 		return res.
 	}
 }
+//evaluates the Propellant status of an engine
 // => Boolean
 function node_ullage {
 
@@ -22,7 +24,8 @@ function node_ullage {
 		return eng[0]:Getmodule("ModuleEngineRF"):Getfield:("Propellant") = "very Stable".
 	}
 }
-//deltav:[Int] => seconds:[Int]
+//calculates the apprx. burntime for a maneuvernodes delta-v
+//deltav:[double] => seconds:[double]
 function mnvr_t {
 Parameter dV.
 
@@ -37,13 +40,14 @@ Parameter dV.
 
 	return result / (length+1).
 }
-
-//deltav:[Int] => throttle:[Int]
+//steadily decreasing the throttle. _deltav is an element of R \ {0}
+//deltav:[double] => throttle:[double]
 function node_throttle_down {
 parameter _deltav.
 return ln(_deltav^_deltav)/100. //just a brainfart. If anyone wants to provide a better function feel free to send a pull.
 }
-//node:[list] => Boolean
+//
+//node[array] => Boolean
 function node_completed {
 Parameter _node.
 
@@ -54,21 +58,82 @@ Parameter _node.
 	RCS on.
 	set steering to ship:facing:vector.
 	set ship:control:fore to 1.
-	wait until _node:deltav:mag < 0.4 and vang(_node:deltav, ship:facing:vector) > 90. //still not precise. It would be a good idea to simply burn for x dv into the direction (next iteration).
+	wait until _node:deltav:mag < 0.4 and vang(_node:deltav, ship:facing:vector) > 90. //TODO:still not precise. It would be a good idea to burn for x dv into the direction.
 	remove nextnode.
 	set ship:control:fore to 0.
 	RCS off.
-	return true.
+	set proceed to true.
 }
-//This will take into account the angular speed at which the ship is rotating in its next iteration. This will prevent kOS from oversteering and using too much fuel.
-//right now its just a placeholder for when I have some more time to work on it.
-//node:[list] =>
+//node[array] => yaw[Int]
+function get_compass_hdg {
+Parameter _node.
+
+	local east is vcrs(ship:up:vector,ship:north:vector).
+	local trig_x is vdot(ship:north:vector,_node:deltav).
+	local trig_y is vdot(east,_node:Deltav).
+	local result is arctan2(trig_y,trig_x).
+	if result < 0 return 360 + result.
+	else return result.
+}
+function node_boost {
+Parameter dir, val.
+
+	set dir to val.
+	wait 0.5.
+	set dir to 0.
+}
+//
+//node[array] => 
 function node_align {
 Parameter _node.
 
-	lock steering to _node.
+	local lock ship_pitch to 90-vang(up:vector,ship:facing:forevector).
+	local lock node_pitch to 90-vang(up:vector,_node:deltav).
+	local lock ship_yaw to mod(-100*ship:bearing,100*360)/100. //TODO: Check the statement, if not working, replace it with -bearing and unquote next. Currently its two decimalplaces long.
+//	if ship_yaw < 0 set ship_yaw to ship_yaw+360. 
+	local lock node_yaw to get_compass_hdg(_node).
+	
+	local lock pitch_dif to abs(ship_pitch - node_pitch).
+	local lock yaw_dif to abs(ship_yaw - node_yaw).
+	
+	local yaw_Dir is 0.
+	local pit_dir is 0.
+	RCS on.
+	if ship_yaw > node_yaw {
+		set yaw_dir to 1.
+		node_boost(ship:control:yaw, yaw_dir).
+	} else {
+		set yaw_dir to -1.
+		node_boost(ship:control:yaw, yaw_dir).
+	}
+	
+	if ship_pitch > node_pitch {
+		set pit_dir to 1.
+		node_boost(ship:control:pitch, pit_dir).
+	} else {
+		set pit_dir to -1.
+		node_boost(ship:control:pitch, pit_dir).
+	}	
+	
+	
+	Until yaw_dif < 1 and pitch_dif < 1 {
+		if yaw_dif <= 1 {
+			node_boost(ship:control:yaw, -yaw_dir).
+		}
+		if pitch_dif <= 1 {
+			node_boost(ship:control:pitch, -pit_dir).
+		}
+	}
+	
+	wait until vang(ship:facing:forevector,_node:deltav) < 1.
+	set sasmode to "maneuver".
+	SAS on.
+	wait 5.
+	SAS off.
+	RCS off.
 }
-//node:list => boolean
+//main function
+//node[array] => boolean
 function node_exec {
 Parameter _node.
 
@@ -76,10 +141,16 @@ Parameter _node.
 	wait until mnvr_t(_node:deltav)+3 > _node:eta - mnvr_t(_node:deltav)+3.
 	RCS on.
 	set pilot:control:fore to 1.
-	wait until node_ullage.
+	local proceed is false.
+	when node_ullage then {
+		set proceed to true.
+	}
+	wait until proceed.
 	set pilot:control:fore to 0.
+	set proceed to false.
 	RCS off.
 	set throttle to 1.
-	wait until node_completed(_node).
+	node_completed(_node).
+	wait until proceed.
 	return true.
 }
