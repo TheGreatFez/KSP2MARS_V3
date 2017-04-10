@@ -12,8 +12,8 @@ CODING STANDARDS:
 3. All commits and merges shall have a type and appropriate commit message detailing all the changes
 	- Any commit message shall contain one of the following when entered:
 		"bug:..." says this commit was used to fix a bug
-		"maint:..." says this commit was used to continue to work on existing code/material
-		"feat:..." says this commit was used to add new code/material
+		"maint:..." (short for maintenance) says this commit was used to continue to work on existing code/material
+		"feat:..." (short for feature) says this commit was used to add new code/material
 	- The commits don't have to be paragraphs but at least enough information to get the gist of what youre commiting
 	- Commits can have more than one tag. EXAMPLE:
 		"bug: fixed a bug in blah.ks that the engines wouldn't ignite properly
