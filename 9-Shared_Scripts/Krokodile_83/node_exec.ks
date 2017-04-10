@@ -41,7 +41,7 @@ Parameter dV.
 //deltav:[Int] => throttle:[Int]
 function node_throttle_down {
 parameter _deltav.
-return ln(_deltav^_deltav)/100. //just a brainfart. If anyone wants to provide a better function feel free to send a push.
+return ln(_deltav^_deltav)/100. //just a brainfart. If anyone wants to provide a better function feel free to send a pull.
 }
 //node:[list] => Boolean
 function node_completed {
