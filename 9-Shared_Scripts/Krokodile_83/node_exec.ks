@@ -40,7 +40,7 @@ Parameter dV.
 
 	return result / (length+1).
 }
-//steadily decreasing the throttle. _deltav is an elelement of R,Q \ {0}
+//steadily decreasing the throttle. _deltav is an element of R \ {0}
 //deltav:[double] => throttle:[double]
 function node_throttle_down {
 parameter _deltav.
@@ -69,8 +69,8 @@ function get_compass_hdg {
 Parameter _node.
 
 	local east is vcrs(ship:up:vector,ship:north:vector).
-	local trig_x is vdot(ship:north:vector,_node:deltav:vector).
-	local trig_y is vdot(east,_node:Deltav:vector).
+	local trig_x is vdot(ship:north:vector,_node:deltav).
+	local trig_y is vdot(east,_node:Deltav).
 	local result is arctan2(trig_y,trig_x).
 	if result < 0 return 360 + result.
 	else return result.
@@ -83,13 +83,13 @@ Parameter dir, val.
 	set dir to 0.
 }
 //
-//node[array] => Boolean
+//node[array] => 
 function node_align {
 Parameter _node.
 
 	local lock ship_pitch to 90-vang(up:vector,ship:facing:forevector).
-	local lock node_pitch to 90-vang(up:vector,_node:deltav:vector).
-	local lock ship_yaw to mod(-100*bearing,100*360)/100. //TODO: Check the statement, if not working, replace it with -bearing and unquote next. Currently its two decimalplaces long.
+	local lock node_pitch to 90-vang(up:vector,_node:deltav).
+	local lock ship_yaw to mod(-100*ship:bearing,100*360)/100. //TODO: Check the statement, if not working, replace it with -bearing and unquote next. Currently its two decimalplaces long.
 //	if ship_yaw < 0 set ship_yaw to ship_yaw+360. 
 	local lock node_yaw to get_compass_hdg(_node).
 	
@@ -98,37 +98,39 @@ Parameter _node.
 	
 	local yaw_Dir is 0.
 	local pit_dir is 0.
-	
+	RCS on.
 	if ship_yaw > node_yaw {
 		set yaw_dir to 1.
-		node_boost(yaw, yaw_dir).
+		node_boost(ship:control:yaw, yaw_dir).
 	} else {
 		set yaw_dir to -1.
-		node_boost(yaw, yaw_dir).
+		node_boost(ship:control:yaw, yaw_dir).
 	}
 	
 	if ship_pitch > node_pitch {
 		set pit_dir to 1.
-		node_boost(pitch, pit_dir).
+		node_boost(ship:control:pitch, pit_dir).
 	} else {
 		set pit_dir to -1.
-		node_boost(pitch, pit_dir).
+		node_boost(ship:control:pitch, pit_dir).
 	}	
 	
+	
 	Until yaw_dif < 1 and pitch_dif < 1 {
-		if yaw_diff <= 1 {
-			node_boost(yaw, -yaw_dir).
+		if yaw_dif <= 1 {
+			node_boost(ship:control:yaw, -yaw_dir).
 		}
 		if pitch_dif <= 1 {
-			node_boost(pitch, -pit_dir).
+			node_boost(ship:control:pitch, -pit_dir).
 		}
 	}
 	
-	wait until vang(ship:facing:forevector,_node:deltav:vector) < 1.
+	wait until vang(ship:facing:forevector,_node:deltav) < 1.
 	set sasmode to "maneuver".
 	SAS on.
 	wait 5.
-	SAS off.	
+	SAS off.
+	RCS off.
 }
 //main function
 //node[array] => boolean
