@@ -15,12 +15,24 @@ Max_Throttle = min(1,3*g0*ThrustMassData(1,1)/(1000*ThrustMassData(1,3)));
 K1 = 1.5;
 K2 = .825;
 
+% REQUIRED INPUTS AND THE DEFAULT VALUES
+
+ThrustEnable = 1;       % 0 = Thrust Disabled, 1 = Thrust Enabled
+
+Aero_On = 1;            % 0 = All Aerodynamics Disabled, 1 = All Aerodynamics Enabled
+Drag_On = 1;        
+Constant_Drag_On = 1;
+Lift_On = 0;
+Constant_Lift_On = 1;
+RefSurfArea = 10.8;     % m^2
+Cd = 2;                 % Value for Constant Coefficient of Drag
+Cl = 2;                 % Value for Constant Coefficient of Lift
 
 GravityTurn = 1;
 PitchOverAlt = 1000;
 PitchOverAngle = 7.5;
-Throttle = 1.7*g0*ThrustMassData(1,1)/(1000*ThrustMassData(1,3));
-SSIGN = 306.412;
+Throttle = 1.5*g0*ThrustMassData(1,1)/(1000*ThrustMassData(1,3));
+Coasting_Parameter = 306.412; % The time to apoapsis that the ship must be under to be able to stage
 PitchSwitch = .5;
 
 PitchProgram = PitchProgramSet(GravityTurn,PitchOverAlt,PitchOverAngle);
@@ -54,9 +66,6 @@ Vy = Z(2); % m/s
 
 CraftInitialV = [Vx;Vy];
 CraftInitialP = [Px;Py];
-
-RefSurfArea = 10.8; % m^2
-Cd = 2;
 %Mass = 5600; % kg
 %WetMass = 7100; % kg
 %DryMass = 3100; % kg 
