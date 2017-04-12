@@ -84,59 +84,115 @@ function node_boost {
 Parameter dir, val.
 
 	set dir to val.
-	wait 0.5.
+	wait 0.1.
 	set dir to 0.
 }
 
+//Evaluates the ships current position to the navall horizon
+function roll_me {
+
+	if vang(facing:vector,up:vector) < 0.1 { 
+    return 0. }
+	set raw to vang(vxcl(facing:vector,up:vector), facing:starvector).
+	if vang(up:vector, facing:topvector) > 90 {
+		if raw > 90 {
+			return 270 - raw.
+		} 
+		else {
+			return -90 - raw.
+		}
+	} 
+	else {
+		return raw - 90.
+	}
+}
 //getting the roll into the right plane first. This is important because the math for yaw and pitch correction would be a disease otherwise .
-//Todo: getting ship:starvector and vcrs(ship:up:vector,ship:north:vector) planar
+//
 function node_roll {
 
-	local east is node_east().
 	
-	set node_roll to true.
+	lock n_roll to roll_me.
+	set done to false.
+	set n_roll_dir to 0.
+
+	
+	if n_roll > 0 {
+		set n_roll_dir to -1.
+		set ship:control:roll to n_roll_dir.
+		wait 0.3.
+		set ship:control:roll to 0.
+	}
+	else {
+		set n_roll_dir to 1.
+		set ship:control:roll to n_roll_dir.
+		wait 0.3.
+		set ship:control:roll to 0.
+	}
+	When n_roll >= -0.1 and n_roll <= 0.1 then {
+		set ship:control:roll to -n_roll_dir.
+		wait 0.3.
+		set ship:control:roll to 0.
+		set done to true.
+		set node_roll_complete to true.
+		if n_roll >= -0.1 and n_roll <= 0.1 {
+			preserve.
+		}
+	}
+	
+	Until done {
+		print"current roll "+n_roll at(0,5).
+	}
+	
+//	wait until done.
+	
 }
 //The function is adjusting the alignment - cavemenstyle. Nothing to be proud of at the moment.
+//Its using the navball to get the ship pointing into the nodes direction.
+//No initial rotation check yet, it would be possible to implement something with ship:angularmomentum or ship:angularvel.
+//The angularvelocity has to be monitored during the maneuver to counteract the torque ... somehow.
 //node[array] => 
 function node_align {
 Parameter _node.
 
-	local node_roll_complete is false.
-	node_roll().
-	wait until node_roll_complete.
-	local lock ship_pitch to 90-vang(up:vector,ship:facing:forevector).
-	print"Ship pitch : " + ship_pitch at(0,5).
-	local lock node_pitch to 90-vang(up:vector,_node:deltav).
-	print"Node pitch :" +node_pitch at(0,6).
-	local lock ship_yaw to -ship:bearing.
+//	set node_roll_complete to false.
+//	node_roll().
+//	wait until node_roll_complete.
+set ship_yaw to 0.
+	lock ship_pitch to 90-vang(up:vector,ship:facing:forevector).
+	lock node_pitch to 90-vang(up:vector,_node:deltav).
+	lock ship_yaw to -1*ship:bearing.
 	if ship_yaw < 0 set ship_yaw to ship_yaw+360. 
-	print"Ship yaw : " + ship_yaw at(0,7).
-	local lock node_yaw to get_compass_hdg(_node:deltav).
-	print"Node yaw :" +node_yaw at(0,8).
+	lock node_yaw to get_compass_hdg(_node:deltav).
 	
-	local lock pitch_dif to abs(ship_pitch - node_pitch).
-	print"dif pitch :" +pitch_dif at(0,9).
-	local lock yaw_dif to abs(ship_yaw - node_yaw).
-	print"dif yaw :" +yaw_dif at(0,10).
+	lock pitch_dif to abs(ship_pitch - node_pitch).
+	lock yaw_dif to abs(ship_yaw - node_yaw).
 	
 	local yaw_Dir is 0. //Using these two values to save the initial input.
 	local pit_dir is 0.
 	RCS on.
 	
-	if ship_yaw > node_yaw { //Todo: Script is not setting the raw controls(No wait in the upcoming loop?)
-		set yaw_dir to 1.
-		node_boost(ship:control:yaw, yaw_dir).
-	} else {
+	if ship_yaw > node_yaw {
 		set yaw_dir to -1.
-		node_boost(ship:control:yaw, yaw_dir).
+		set ship:control:yaw to yaw_dir.
+		wait 0.3.
+		set ship:control:yaw to 0.
+	} else {
+		set yaw_dir to 1.
+		set ship:control:yaw to yaw_dir.
+		wait 0.3.
+		set ship:control:yaw to 0.
 	}
 	
 	if ship_pitch > node_pitch {
-		set pit_dir to 1.
-		node_boost(ship:control:pitch, pit_dir).
-	} else {
 		set pit_dir to -1.
-		node_boost(ship:control:pitch, pit_dir).
+		set ship:control:pitch to pit_dir.
+		wait 0.3.
+		set ship:control:pitch to 0.
+	} else {
+		set pit_dir to 1.
+		set ship:control:pitch to pit_dir.
+		wait 0.3.
+		set ship:control:pitch to 0.
 	}	
 	
 	
@@ -147,7 +203,7 @@ Parameter _node.
 		print"Node yaw :" +node_yaw at(0,8).
 		print"dif pitch :" +pitch_dif at(0,9).
 		print"dif yaw :" +yaw_dif at(0,10).
-		print"activating Thrusters" +yaw_dif at(0,11).
+		print"activating Thrusters"at(0,11).
 		if yaw_dif <= 1 {
 			node_boost(ship:control:yaw, -yaw_dir).
 		}
@@ -157,12 +213,13 @@ Parameter _node.
 		wait 0.01.
 	}
 	
-	wait until vang(ship:facing:forevector,_node:deltav) < 1. //TODO: Refactor this as it should be possible to achieve an alignment without SAS.
+	When vang(ship:facing:forevector,_node:deltav) < 0.5 then {
 	set sasmode to "maneuver".
 	SAS on.
 	wait 5.
 	SAS off.
 	RCS off.
+	}
 }
 //main function
 //node[array] => boolean
@@ -186,3 +243,6 @@ Parameter _node.
 	wait until proceed.
 	return true.
 }
+
+node_align(nextnode).
+wait until 1 < 0.
