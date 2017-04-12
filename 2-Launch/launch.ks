@@ -1,5 +1,7 @@
 declare parameter ap_setpoint. //Apoapsis setpoint
 declare parameter headng. //Horizon Bearing
+declare parameter target_incline.
+
 
 lock vs to ship:verticalspeed. //vertical speed
 
@@ -30,14 +32,31 @@ until vs<0{
 
       set pitch to PitchPID:update(cur_time, error).//PID output
 
+      //sets heading to prograde heading
+      if abs(ship:orbit:inclination-target_incline)<0.1{
+      	  set tdir to ship:velocity:orbit.
+	  set tdir to tdir:normalized.
+
+	  set measured_pitch to 90-vang(tdir,up:vector).
+	  set tdir to angleaxis(measured_pitch, tdir:direction:starvector)*tdir.
+	  if (vcrs(north:vector,tdir):normalized-up:vector):mag<0.1{
+	     set headng to vang(tdir, north:vector).
+	  }
+	  else{
+	     set headng to 360 - vang(tdir, north:vector).
+	  }
+      }
+
       set steertag to heading(headng, pitch).//update steering variable
+
+      if (setpoint-orbit:periapsis)<10000{ break.}//in case of early finish
 
       clearscreen.
 
       print "Apoapsis: " + orbit:apoapsis + "m" at (0,1).
 
       print "Pitch: " + pitch + "deg" at (0,3).
-      
+
       wait 0.
 }
 

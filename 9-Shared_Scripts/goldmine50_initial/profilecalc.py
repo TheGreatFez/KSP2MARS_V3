@@ -3,11 +3,11 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
 global dm, m0
-dm = -(75.5368+175.5873)*9 #rate of fuel consumption kg/s
-m0 = 486.931*(10.0**3.0) #mass at 100m/s
-m01 = 548.759*(10.0**3.0) #mass at 0m/s
-mwet = 424.6*(10.0**3.0) #mass of first stage fuel tank with fuel
-mdry = 15*(10.0**3.0) #mass of first stage fuel tank without fuel
+dm = -(66.93+403.535) #rate of fuel consumption kg/s
+m0 = 86.858*(10.0**3.0) #mass at 100m/s
+m01 = 92.715*(10.0**3.0) #mass at 0m/s
+mwet = 85.98*(10.0**3.0) #mass of first stage fuel tank with fuel
+mdry = 5.245*(10.0**3.0) #mass of first stage fuel tank without fuel
 
 fw = (mwet-(m01-m0)-mdry) #total mass of fuel used after 100m/s
 tf = -fw/dm #time of burn
@@ -18,7 +18,7 @@ def rho(y,t): #atmospheric density
 def Fric(y,v,t): #aerodynamic drag
     return 0.5*rho(y,t)*v*v*0.3*22.8
 
-MaxT = 820*9*(10.0**3.0) #Max Thrust
+MaxT = -dm*(450)*0.66*9.81 #Max Thrust
 r = 6371000 #Earth radius
 
 def g(y): #gravity
@@ -33,9 +33,9 @@ def dpsi(y,psi,v): #change in pitch angle
 def model(v, a, b): #fitting model
     return a*numpy.arctan(b*(v))
 
-y0 = 1381.1447 #height in m at 100m/s
+y0 = 1944.02 #height in m at 100m/s
 v0 = 100 #initial velocity
-psi0 = math.radians(2.5) #varied quantity, pitch-over
+psi0 = math.radians(4.1) #varied quantity, pitch-over
 
 incr = 0.1
 
@@ -72,6 +72,8 @@ while numpy.abs(model(100+c, *popt)-math.radians(1.5))>0.001 and c>=-100:
     c += -0.001
 
 params = popt
+
+params[0] = math.radians(params[0])
 
 print("Parameters for model: a*arctan(b*(v+c)) \n")
 print("a: %f" % params[0])
