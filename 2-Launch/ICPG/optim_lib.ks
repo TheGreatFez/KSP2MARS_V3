@@ -33,7 +33,8 @@ declare function grad_descent {
 	parameter input_fun.									// Function to optimize (has to have 3 arguments)
 	parameter init_guess is list(0,0,0).					// (x,y,z)
 	parameter settings is list(1e-4,50,0.1,0.9).			// (Tol,MaxIter,LearningRate,MomentumFactor)
-	
+	parameter optim_verbose is 0.							// If optim_verbose = 1, print debugging data.
+
 	// Initialize helping variables.
 	local step_size is 1.
 	local iter is 0.
@@ -82,12 +83,11 @@ declare function grad_descent {
 		set param[0] to param[0] + step_grad[0].
 		set param[1] to param[1] + step_grad[1].
 		set param[2] to param[2] + step_grad[2].
-		print(param).
+		
+		if optim_verbose = 1 {print(param).}
 	}
 	
-	print("").
-	print("Optimized value:").
-	print(param).
+	if optim_verbose = 1 {print(""). print("Optimized value: "). print(param).}
 	return param.
 }
 
@@ -98,6 +98,7 @@ declare function acc_grad_descent {
 	parameter input_fun.									// Function to optimize (has to have 3 arguments)
 	parameter init_guess is list(0,0,0).					// (x,y,z)
 	parameter settings is list(1e-4,50,0.1,0.9).			// (Tol,MaxIter,LearningRate,MomentumFactor)
+	parameter optim_verbose is 0.							// If optim_verbose = 1, print debugging data.
 	
 	// Initialize helping variables.
 	local step_size is 1.
@@ -147,11 +148,9 @@ declare function acc_grad_descent {
 		set param[0] to param[0] + step_grad[0].
 		set param[1] to param[1] + step_grad[1].
 		set param[2] to param[2] + step_grad[2].
-		print(param).
+		
+		if optim_verbose = 1 {print(param).}
 	}
-	
-	print("").
-	print("Optimized value:").
-	print(param).
+	if optim_verbose = 1 {print(""). print("Optimized value: "). print(param).}
 	return param.
 }
