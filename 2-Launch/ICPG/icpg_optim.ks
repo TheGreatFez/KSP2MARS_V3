@@ -10,7 +10,8 @@ declare function icpg_optim {
 	parameter constraints.													// constraints = [max_cutofftime,max_pitchangle,max_thrust]
 	parameter optim_settings.												// optim_settings = [tolerance,max_iter,learning_rate,momentum_factor]
 	parameter init_guess.													// init_guess = [cutofftime_guess,pitchangle_guess,thrust_guess]
-	
+	parameter optim_verbose is 0.											// If optim_verbose = 1, print debugging data.
+
 	// Prepare variables for optimization.
 	local cutoff_eta is init_guess[0].
 	local pitch_angle is init_guess[1].
@@ -20,6 +21,6 @@ declare function icpg_optim {
 	local icpg_optimfun is icpg_cost@:bind(target_state,weights,current_state,body_params,constraints).
 	
 	// Use gradient descent from optim_lib.ks to optimize ICPG parameters.
-	local optim_guid is acc_grad_descent(icpg_optimfun@,init_guess,optim_settings).
+	local optim_guid is acc_grad_descent(icpg_optimfun@,init_guess,optim_settings,optim_verbose).
 	return optim_guid.
 }

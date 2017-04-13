@@ -17,4 +17,4 @@ set optim_settings to list(0,10000000,2e-10,0.999).
 set target_state to list(7700,0,165000).
 set init_guess to list(380,22.5,1).
 
-print(icpg_optim(target_state,weights,current_state,body_params,constraints,optim_settings,init_guess)).
+print(icpg_optim(target_state,weights,current_state,body_params,constraints,optim_settings,init_guess,1)).
