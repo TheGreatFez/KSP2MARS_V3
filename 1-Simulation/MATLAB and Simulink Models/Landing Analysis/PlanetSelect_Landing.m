@@ -1,8 +1,8 @@
 Planet = 'Mars'; % Choice between Earth and Mars
 %load 'DragData_3manCap.mat'
 load 'DragData_TwoStageTestCraft.mat'
-load 'EarthAtmoDataRSS.mat'
-load 'Mars Atmo Data.mat'
+load '..\EarthAtmoDataRSS.mat'
+load '..\MarsAtmoDataRSS.mat'
 load 'KerbinAtmoData.mat'
 %load 'ThrustMassData.mat'
 %load 'TwoStageTestCraft.mat'
