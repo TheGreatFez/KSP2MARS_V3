@@ -56,7 +56,6 @@ def ISP(y):#ISP calculation
 
     return calc_isp
 
-    return 0.5*rho(y,t)*v*v*0.3*22.8
 def Thrust(dm,y):#Thrust calculation
     thrott_limit = 0.66#change as necessary, can even be a function
     return -dm*ISP(y)*thrott_limit*9.81
