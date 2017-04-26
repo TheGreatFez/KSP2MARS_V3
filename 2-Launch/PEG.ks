@@ -6,6 +6,9 @@
 /////////Navigation Parameters///////
 /////////////////////////////////////
 
+declare parameter azi is 45.
+declare parameter orbit_alt is 220.
+
 set gravity_0 to 9.80665.
 
 lock throttle to 1.
@@ -18,9 +21,9 @@ from {local i is 0.} until i = 1 step {set i to i.} do{
     wait 0.
 }
 
-set final_radius to 220*1000+orbit:body:radius.
+set final_radius to orbit_alt*1000+orbit:body:radius.
 set final_vert_vel to 0.
-set final_horiz_vel to 7500.
+set final_horiz_vel to sqrt(orbit:body:mu/final_radius).
 
 /////////////////////////////////////
 ////////////Guidance/////////////////
@@ -32,7 +35,7 @@ declare function guidance{
 
     local ship_r is ship:position - orbit:body:position.
 
-    local ship_v is orbit:velocity:surface.
+    local ship_v is orbit:velocity:orbit.
 
     local exhaust_vel is PEG_isp*gravity_0.
 
@@ -82,7 +85,7 @@ declare function estimate{
 ////////////Navigation basis vectors//////////////
 
     local ship_r is ship:position-orbit:body:position.
-    local ship_v is orbit:velocity:surface.
+    local ship_v is orbit:velocity:orbit.
 
     local vert_vel is vdot(ship_r:normalized,ship_v).
 
@@ -138,7 +141,7 @@ declare function estimate{
 /////////////////Steering/////////////////////
 //////////////////////////////////////////////
 
-set steertag to heading(45,0).
+set steertag to heading(azi,0).
 lock steering to steertag.
 
 set exhaust_vel to PEG_isp*gravity_0.
@@ -168,7 +171,7 @@ set new_guess to final_guess.
 
 set dt to 0.01.
 
-until new_guess<1{
+until new_guess<10{
 
       set start_time to time:seconds.
       
@@ -179,7 +182,7 @@ until new_guess<1{
 
       set params to guidance(new_guess).
 
-      set steertag to heading(45, desired_pitch).
+      set steertag to heading(azi, desired_pitch).
 
       wait 0.
 
@@ -193,6 +196,6 @@ until new_guess<1{
 
 }
 
-wait until final_horiz_vel-ship:groundspeed<=5.
+wait until final_horiz_vel-orbit:velocity:orbit:mag<=1.
 
 lock throttle to 0.
