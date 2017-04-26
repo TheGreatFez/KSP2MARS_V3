@@ -3,8 +3,8 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
 global dm, m0
-dm = -(66.93+403.535) #rate of fuel consumption kg/s
-m01 = 92.715*(10.0**3.0) #mass at 0m/s
+dm = -(66.93+403.5350) #rate of fuel consumption kg/s
+m01 = 107.671*(10.0**3.0) #mass at 0m/s
 m0 = m01
 mwet = 85.98*(10.0**3.0) #mass of first stage fuel tank with fuel
 mdry = 5.342*(10.0**3.0) #mass of first stage fuel tank without fuel
@@ -50,19 +50,19 @@ def rho(y): #atmospheric density
     return density
 
 def ISP(y):#ISP calculation
-    vacuum_isp = 453
-    sealevel_isp = 363
+    vacuum_isp = 363
+    sealevel_isp = 453
     calc_isp = vacuum_isp+(sealevel_isp - vacuum_isp)*pressure(y)
 
     return calc_isp
 
 def Thrust(dm,y):#Thrust calculation
-    thrott_limit = 0.66#change as necessary, can even be a function
+    thrott_limit = 0.755#change as necessary, can even be a function
     return -dm*ISP(y)*thrott_limit*9.81
 
 def Fric(y,v): #aerodynamic drag
-    Cd = 0.88#drag coefficient
-    Ref_Area = 10.993#cross-sectional area
+    Cd = 0.65#drag coefficient
+    Ref_Area = 10.9114#cross-sectional area
     return 0.5*rho(y)*v*v*Cd*Ref_Area
 
 r = 6371000 #Earth radius
@@ -119,7 +119,7 @@ print("Initial Height: %f \t" % y0)
 print("Initial velocity: %f \t" % v0)
 print("Initial pitch: %f \t" % (90-math.degrees(psi0)))
 
-psi0 = math.radians(3.25) #varied quantity, pitch-over angle
+psi0 = math.radians(2.0) #varied quantity, pitch-over angle
 
 #storage arrays
 H = [] #Height
